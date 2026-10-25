@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Will you go on a date with me?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdecef;
+      --card: #fff8f9;
+      --cherry: #d6245c;
+      --cherry-dark: #a81747;
+      --ink: #5a0f2a;
+      --blush: #f7b6c8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Nunito", Arial, sans-serif;
+    }
+
+    .card {
+      background: var(--card);
+      border: 3px solid var(--blush);
+      border-radius: 24px;
+      padding: 40px 32px;
+      width: min(92vw, 460px);
+      text-align: center;
+    }
+
+    h1 {
+      font-family: "Bagel Fat One", "Arial Black", sans-serif;
+      font-weight: 400;
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      line-height: 1.15;
+      margin: 0 0 28px;
+      color: var(--cherry);
+    }
+
+    button {
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    #yes {
+      background: var(--cherry);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 40px;
+      transition: transform 0.15s, background 0.15s;
+    }
+    #yes:hover { background: var(--cherry-dark); transform: scale(1.06); }
+
+    /* Ang No button: kapag gumalaw, magiging "fixed" para makalipad sa kahit saan sa screen */
+    #no {
+      background: white;
+      color: var(--ink);
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      padding: 10px 24px;
+      margin-left: 12px;
+      transition: left 0.25s, top 0.25s;
+    }
+
+    /* Step 2: pili ng date at oras */
+    #step2 { display: none; }
+    input[type="date"] {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 10px 14px;
+      border: 2px solid var(--blush);
+      border-radius: 12px;
+      background: white;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+    .times {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .time {
+      background: white;
+      border: 2px solid var(--blush);
+      border-radius: 999px;
+      padding: 10px 0;
+      color: var(--ink);
+    }
+    .time.selected { background: var(--cherry); border-color: var(--cherry); color: white; }
+
+    #set {
+      width: 100%;
+      background: var(--cherry);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 14px;
+    }
+    #set:hover { background: var(--cherry-dark); }
+
+    #done { display: none; }
+    #hint { min-height: 1.2em; margin: 0 0 16px; font-size: 0.9rem; color: var(--cherry-dark); }
+  </style>
+</head>
+<body>
+  <main class="card">
+
+    <!-- Step 1: ang tanong -->
+    <section id="step1">
+      <h1>Will you go on a date with me?</h1>
+      <button id="yes">Yes</button>
+      <button id="no">No</button>
+    </section>
+
+    <!-- Step 2: pagpili ng date at oras -->
+    <section id="step2">
+      <h1>So... when are you free?</h1>
+      <input type="date" id="date">
+      <div class="times" id="times"></div>
+      <p id="hint"></p>
+      <button id="set">Set the date</button>
+    </section>
+
+    <!-- Step 3: confirmation -->
+    <section id="done">
+      <h1 id="doneText"></h1>
+    </section>
+
+  </main>
+
+  <script>
+    const yes = document.getElementById("yes");
+    const no = document.getElementById("no");
+
+    // ----- Ang No button ay tumatakas -----
+    function dodge() {
+      // Gawing fixed para malaya siyang gumalaw sa buong screen
+      no.style.position = "fixed";
+      const maxLeft = window.innerWidth - no.offsetWidth - 10;
+      const maxTop = window.innerHeight - no.offsetHeight - 10;
+      no.style.left = Math.max(10, Math.random() * maxLeft) + "px";
+      no.style.top = Math.max(10, Math.random() * maxTop) + "px";
+      no.style.margin = "0";
+    }
+
+    // Computer: tumatakas kapag dumikit ang mouse
+    no.addEventListener("mouseover", dodge);
+    // Phone: tumatakas kapag hinawakan
+    no.addEventListener("touchstart", function (e) {
+      e.preventDefault();
+      dodge();
+    });
+    // Kung sakaling ma-click pa rin, tumakas pa rin
+    no.addEventListener("click", dodge);
+
+    // ----- Kapag Yes -----
+    yes.addEventListener("click", function () {
+      document.getElementById("step1").style.display = "none";
+      no.style.display = "none";
+      document.getElementById("step2").style.display = "block";
+    });
+
+    // ----- Mga oras na pwedeng piliin -----
+    const timeList = ["12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM",
+                      "6:00 PM", "7:00 PM", "8:00 PM"];
+    let chosenTime = "";
+    const timesBox = document.getElementById("times");
+
+    timeList.forEach(function (t) {
+      const b = document.createElement("button");
+      b.className = "time";
+      b.textContent = t;
+      b.addEventListener("click", function () {
+        document.querySelectorAll(".time").forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        chosenTime = t;
+      });
+      timesBox.appendChild(b);
+    });
+
+    // ----- Set the date -----
+    document.getElementById("set").addEventListener("click", function () {
+      const d = document.getElementById("date").value;
+      const hint = document.getElementById("hint");
+      if (!d || !chosenTime) {
+        hint.textContent = "Pick a date and a time first.";
+        return;
+      }
+      const nice = new Date(d + "T00:00").toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric"
+      });
+      document.getElementById("step2").style.display = "none";
+      document.getElementById("done").style.display = "block";
+      document.getElementById("doneText").textContent = "It's a date! " + nice + ", " + chosenTime + ".";
+    });
+  </script>
+</body>
+</html>
